@@ -24,7 +24,27 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
+  // Match a string of 10 digits
+  var phoneNumRegex = /^\d{10}$/
+
   Meteor.startup(function () {
     // code to run on server at startup
+  });
+
+  Meteor.methods({
+      create_phone_call: function(phoneCall) {
+        if( phoneCall === undefined )
+          throw new Meteor.Error(400, "No phone call instance provided")
+
+        var errors = {phone:[], time: [], retries: []}
+        if( phoneCall.phone === undefined ){
+          errors.phone.push("No phone number specified.");
+        }
+        else if( !phoneNumRegex.match(phoneCall.phone) ){
+          errors.phone.push("Phone number must be 10 digits.")
+        }
+
+        Players.insert(phoneCall)
+      }
   });
 }
