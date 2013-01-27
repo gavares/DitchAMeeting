@@ -65,7 +65,11 @@ if (Meteor.isServer) {
         }
 
         if( errors.phone.length || errors.time.length || errors.retries.length ){
-          throw new Meteor.Error(400, errors);
+          if( errors.phone.length === 0) delete errors.phone;
+          if( errors.time.length === 0) delete errors.time;
+          if( errors.retries.length === 0) delete errors.retries;
+
+          throw new Meteor.Error(400, "", errors);
         }
 
         PhoneCalls.insert(phoneCall)
