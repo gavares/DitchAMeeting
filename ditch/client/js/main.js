@@ -23,6 +23,16 @@ var handleResult = function (err, result) {
   }
 };
 
+var now = new Date(),
+    max = new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 7));
+
+Template.create.rendered = function () {
+  $('#time').datetimepicker({
+    minDate: now,
+    maxDate: max
+  });
+};
+
 Template.create.events({
   'submit form': function (e) {
     var $target = $(e.target),
@@ -35,6 +45,12 @@ Template.create.events({
     $('.text-error').text('');
 
     data = $target.serializeObject();
+
+    try {
+      data.time = $('#time').datetimepicker('getDate').getTime();
+    } catch (e) {
+      data.time = (new Date()).getTime();
+    }
 
     Meteor.call('create_phone_call', data, handleResult);
   }

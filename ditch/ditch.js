@@ -40,15 +40,12 @@ if (Meteor.isServer) {
           }
         }
 
-        if( phoneCall.time != undefined && phoneCall.time.toLowerCase() != 'now' ){
+        if( phoneCall.time != undefined){
           // verify that time is a number and in the future
           if( typeof phoneCall.time === 'number' ) {
             var now = new Date().getTime() - 60 * 1000; // some delta to prevent extraneous errors
             var weekFromNow = now + oneWeek;
-            if( phoneCall.time  < now ){
-              errors.time.push("Scheduled call time cannot be in the past.");
-            }
-            else if( phoneCall.time > weekFromNow ) {
+            if( phoneCall.time > weekFromNow ) {
               errors.time.push("Scheduled call time cannot be more than 1 week in the future.");
             }
           }
