@@ -17,6 +17,8 @@ if (Meteor.isServer) {
   var CALLBACK_ENDPOINT = "www.ditchameeting.com"
   var TWILIO_PHONE_NUM = '+15126237642'
 
+  var timeZone = "America/Los_Angeles";
+
   // Max number of allowable retries
   var maxRetries = 5
 
@@ -27,6 +29,7 @@ if (Meteor.isServer) {
   var oneWeek = 1000 * 60 * 60 * 24 * 7;
 
   var twilioClient = undefined;
+  var cron = undefined;
 
   Meteor.startup(function () {
     // Next 6 lines load node modules into meteor
@@ -41,12 +44,15 @@ if (Meteor.isServer) {
     console.log("ModulePath: " + modulePath)
 
     var twilioPath = modulePath + '/twilio/';
-    console.log("twilioPath: " + twilioPath)
+    var cronPath = modulePath + '/cron/';
 
     var Twilio = require(twilioPath)
-    console.log("Twilio: " + Twilio)
     twilioClient = new Twilio(ACCOUNT_SID, AUTH_TOKEN);
+    cron = require(cronPath);
 
+    // Scan the PhoneCalls collection and schedule anything
+    // that is still pending
+    schedulePendingPhoneCalls()
   });
 
   Meteor.methods({
@@ -94,13 +100,36 @@ if (Meteor.isServer) {
           throw new Meteor.Error(400, "", errors);
         }
 
+        // Insert the phone call into our mongo instance
         PhoneCalls.insert(phoneCall)
-        makeCall( phoneCall )
+        schedulePhoneCall(phoneCall)
       }
   });
 
-  function makeCall(phoneCall) {
+  /**
+   * Scans the PhoneCalls collection and schedules any pending calls.
+   * */
+  function schedulePendingPhoneCalls() {
+    var now = new Date().getTime();
+    PhoneCalls.find({time: {$gt: now}}).forEach( schedulePhoneCall );
+  }
 
+  function schedulePhoneCall(phoneCall) {
+      // schedule a future to exec the phonecall 
+      var callTime = new Date(phoneCall.time);
+      console.log("Scheduling phoneCall: " + phoneCall + " at " + callTime)
+      var j = new cron.CronJob(callTime, function(){
+          console.log("Initiating phoneCall: " + phoneCall);
+          makeCall( phoneCall )
+        },
+        function() {
+          console.log("Completed phoneCall: " + phoneCall)
+        },
+        true
+      );
+  }
+
+  function makeCall(phoneCall) {
     // Alright, our phone number is set up. Let's, say, make a call:
     twilioClient.makeCall({
         to: phoneCall.phone,
