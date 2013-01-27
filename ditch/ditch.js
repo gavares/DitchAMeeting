@@ -35,7 +35,7 @@ if (Meteor.isServer) {
         }
         else {
           phoneCall.phone = phoneCall.phone.trim();
-          if( !phoneNumRegex.match(phoneCall.phone) ){
+          if( !phoneNumRegex.test(phoneCall.phone) ){
             errors.phone.push("Phone number must be 10 digits.")
           }
         }
