@@ -17,6 +17,8 @@ if (Meteor.isServer) {
   var CALLBACK_ENDPOINT = "www.ditchameeting.com"
   var TWILIO_PHONE_NUM = '+15126237642'
 
+  var MAX_CALLS_PER_DAY = 100
+
   var timeZone = "America/Los_Angeles";
 
   // Max number of allowable retries
@@ -71,10 +73,12 @@ if (Meteor.isServer) {
           }
         }
 
+        console.log("Call time incomming as: ", phoneCall.time)
+
         if( phoneCall.time != undefined){
           // verify that time is a number and in the future
           if( typeof phoneCall.time === 'number' ) {
-            var now = new Date().getTime() - 60 * 1000; // some delta to prevent excessive rejection
+            var now = new Date().getTime(); // some delta to prevent excessive rejection
             var weekFromNow = now + oneWeek;
             if( phoneCall.time > weekFromNow ) {
               errors.time.push("Scheduled call time cannot be more than 1 week in the future.");
@@ -92,6 +96,16 @@ if (Meteor.isServer) {
           errors.retries.push("Number of retries cannot be more than " + maxRetries);
         }
 
+        // Make sure we haven't exceeded max calls for the specified date
+        var callDateStr = new Date(phoneCall.time).toDateString();
+        var numCallsForDate = PhoneCalls.find({$where: 'new Date(this.time).toDateString() == "' + callDateStr + '"' }).count();
+        console.log("Found ", numCallsForDate, " calls for date ", callDateStr);
+
+        if( numCallsForDate >= MAX_CALLS_PER_DAY )
+          throw new Meteor.Error(400, "Ditch A Metting has exceeded the maximum number of calls for the date specified.");
+
+
+
         if( errors.phone.length || errors.time.length || errors.retries.length ){
           if( errors.phone.length === 0) delete errors.phone;
           if( errors.time.length === 0) delete errors.time;
@@ -102,6 +116,7 @@ if (Meteor.isServer) {
 
         // Insert the phone call into our mongo instance
         PhoneCalls.insert(phoneCall)
+        console.log("phoneCallTime:",phoneCall.time)
         schedulePhoneCall(phoneCall)
       }
   });
@@ -116,10 +131,14 @@ if (Meteor.isServer) {
 
   function schedulePhoneCall(phoneCall) {
       // schedule a future to exec the phonecall 
+      console.log("phoneCallTime:",phoneCall.time)
       var callTime = new Date(phoneCall.time);
+      console.log("CallTime:", callTime);
+      console.log("CallTime:", callTime.getTime());
       var now = new Date().getTime() + 5000; 
-      if( callTime.getTime() < now )
+      if( callTime.getTime() < now ){
         callTime = new Date( now )
+      }
 
       console.log("Scheduling phoneCall: ", phoneCall," at ", callTime)
       var j = new cron.CronJob(callTime, function(){
