@@ -1,3 +1,14 @@
+// Set up a collection to contain phone call information. On the server,
+// it is backed by a MongoDB collection named "PhoneCalls".
+// A phone call record looks like:
+// { 
+//   phone: "1234567890",
+//   time: 1234567890L,
+//   retries: 5
+// }
+//
+PhoneCalls = new Meteor.Collection("PhoneCalls");
+
 if (Meteor.isClient) {
   Template.hello.greeting = function () {
     return "Welcome to ditch.";
