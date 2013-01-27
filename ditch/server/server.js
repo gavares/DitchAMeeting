@@ -11,6 +11,12 @@ PhoneCalls = new Meteor.Collection("PhoneCalls");
 
 if (Meteor.isServer) {
 
+  // Twilio account credentials
+  var ACCOUNT_SID = "ACcf48e69f532d045c92e49ad758a58a55"
+  var AUTH_TOKEN = "04f0f80892d0d6eeb14ab8fafef8d930"
+  var CALLBACK_ENDPOINT = "www.ditchameeting.com"
+  var TWILIO_PHONE_NUM = '+15126237642'
+
   // Max number of allowable retries
   var maxRetries = 5
 
@@ -20,8 +26,27 @@ if (Meteor.isServer) {
   // one week in milliseconds
   var oneWeek = 1000 * 60 * 60 * 24 * 7;
 
+  var twilioClient = undefined;
+
   Meteor.startup(function () {
-    // code to run on server at startup
+    // Next 6 lines load node modules into meteor
+    // See: http://stackoverflow.com/questions/10476170/how-can-i-deploy-node-modules-in-a-meteor-app-on-meteor-com
+    var require = __meteor_bootstrap__.require;
+    var sys = require('sys')
+    var path = require('path');
+    var fs = require('fs');
+    var base = path.resolve('.');
+    var isBundle = fs.existsSync(base + '/bundle');
+    var modulePath = base + (isBundle ? '/bundle/static' : '/public') + '/node_modules';
+    console.log("ModulePath: " + modulePath)
+
+    var twilioPath = modulePath + '/twilio/';
+    console.log("twilioPath: " + twilioPath)
+
+    var Twilio = require(twilioPath)
+    console.log("Twilio: " + Twilio)
+    twilioClient = new Twilio(ACCOUNT_SID, AUTH_TOKEN);
+
   });
 
   Meteor.methods({
@@ -69,6 +94,19 @@ if (Meteor.isServer) {
         }
 
         PhoneCalls.insert(phoneCall)
+        makeCall( phoneCall )
       }
   });
+
+  function makeCall(phoneCall) {
+
+    // Alright, our phone number is set up. Let's, say, make a call:
+    twilioClient.makeCall({
+        to: phoneCall.phone,
+        from: TWILIO_PHONE_NUM,
+        url: 'http://www.example.com/twiml.php'
+    }, function(err, responseData){
+      console.log( responseData )
+    });
+  }
 }
