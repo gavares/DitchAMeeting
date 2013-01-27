@@ -768,6 +768,13 @@
 			this.formattedDate = $.datepicker.formatDate(dateFmt, (dt === null ? new Date() : dt), formatCfg);
 			var formattedDateTime = this.formattedDate;
 
+      // Workaround: https://github.com/trentrichardson/jQuery-Timepicker-Addon/issues/470
+      if(dp_inst.lastVal==""){
+        dp_inst.currentYear=dp_inst.selectedYear;
+        dp_inst.currentMonth=dp_inst.selectedMonth;
+        dp_inst.currentDay=dp_inst.selectedDay;
+      }
+
 			/*
 			* remove following lines to force every changes in date picker to change the input value
 			* Bug descriptions: when an input field has a default value, and click on the field to pop up the date picker. 
