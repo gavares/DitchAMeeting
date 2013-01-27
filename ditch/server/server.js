@@ -74,7 +74,7 @@ if (Meteor.isServer) {
         if( phoneCall.time != undefined){
           // verify that time is a number and in the future
           if( typeof phoneCall.time === 'number' ) {
-            var now = new Date().getTime() - 60 * 1000; // some delta to prevent extraneous errors
+            var now = new Date().getTime() - 60 * 1000; // some delta to prevent excessive rejection
             var weekFromNow = now + oneWeek;
             if( phoneCall.time > weekFromNow ) {
               errors.time.push("Scheduled call time cannot be more than 1 week in the future.");
@@ -117,13 +117,17 @@ if (Meteor.isServer) {
   function schedulePhoneCall(phoneCall) {
       // schedule a future to exec the phonecall 
       var callTime = new Date(phoneCall.time);
-      console.log("Scheduling phoneCall: " + phoneCall + " at " + callTime)
+      var now = new Date().getTime() + 5000; 
+      if( callTime.getTime() < now )
+        callTime = new Date( now )
+
+      console.log("Scheduling phoneCall: ", phoneCall," at ", callTime)
       var j = new cron.CronJob(callTime, function(){
-          console.log("Initiating phoneCall: " + phoneCall);
+          console.log("Initiating phoneCall: ", phoneCall);
           makeCall( phoneCall )
         },
         function() {
-          console.log("Completed phoneCall: " + phoneCall)
+          console.log("Completed phoneCall: ", phoneCall)
         },
         true
       );
