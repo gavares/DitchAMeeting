@@ -43,7 +43,11 @@ Template.create.rendered = function () {
 };
 
 Template.scheduled.calls = function () {
-  return PhoneCalls.find({time: {$gt: new Date().getTime()}, clientId: clientId});
+  var calls = PhoneCalls.find({time: {$gt: new Date().getTime()}, clientId: clientId});
+  return calls.map(function (elm) {
+    elm.time = new Date(elm.time);
+    return elm;
+  });
 };
 
 Template.scheduled.events({
