@@ -1,3 +1,5 @@
+PhoneCalls = new Meteor.Collection("PhoneCalls");
+
 var handleResult = function (err, result) {
   if (err) {
     if (err.details) {
@@ -32,6 +34,20 @@ Template.create.rendered = function () {
     maxDate: max
   });
 };
+
+Template.scheduled.calls = function () {
+  return PhoneCalls.find({});
+  //return PhoneCalls.find({time: {$gt: new Date().getTime()}})
+};
+
+Template.scheduled.events({
+  'click button': function (e) {
+    var $target = $(e.target),
+        id = $target.data('id');
+
+    PhoneCalls.remove(id);
+  }
+});
 
 Template.create.events({
   'submit form': function (e) {

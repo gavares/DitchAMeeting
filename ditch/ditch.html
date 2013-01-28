@@ -22,6 +22,7 @@
     <div class="row">
       <div class="span6">
         <p>Enter your phone number and a time to call and we'll be sure to offering you a way out of your next bad date or overly verbose meeting. Spouse get sick? Water bed spring a leak? Use any reason you'd like to leave your meeting in a hurry.</p>
+        {{>scheduled}}
       </div>
       <div class="span6">
         {{> create}}
@@ -29,7 +30,28 @@
     </div>
   </div>
 </body>
-
+<template name="scheduled">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Number</th>
+        <th>Date</th>
+        <th>Retries</th>
+        <th>Delete</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each calls}}
+      <tr>
+        <td>{{phone}}</td>
+        <td>{{time}}</td>
+        <td>{{retries}}</td>
+        <td><button class="btn" data-id="{{_id}}">delete</button></td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</template>
 <template name="create">
   <form>
     <fieldset>
