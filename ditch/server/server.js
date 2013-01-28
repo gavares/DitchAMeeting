@@ -5,6 +5,9 @@
 //   phone: "1234567890",
 //   time: 1234567890L,
 //   retries: 5
+//   say: "say this when the callee answers"
+//   voice: "man"
+//   language: "en-gb"
 // }
 //
 PhoneCalls = new Meteor.Collection("PhoneCalls");
@@ -32,6 +35,7 @@ if (Meteor.isServer) {
 
   var twilioClient = undefined;
   var cron = undefined;
+  var libxml = undefined;
 
   Meteor.startup(function () {
     // Next 6 lines load node modules into meteor
@@ -47,10 +51,12 @@ if (Meteor.isServer) {
 
     var twilioPath = modulePath + '/twilio/';
     var cronPath = modulePath + '/cron/';
+    var libxmlPath = modulePath + '/libxmljs/';
 
     var Twilio = require(twilioPath)
     twilioClient = new Twilio(ACCOUNT_SID, AUTH_TOKEN);
     cron = require(cronPath);
+    libxml = require(libxmlPath);
 
     // Scan the PhoneCalls collection and schedule anything
     // that is still pending
@@ -72,8 +78,6 @@ if (Meteor.isServer) {
             errors.phone.push("Phone number must be 10 digits.")
           }
         }
-
-        console.log("Call time incomming as: ", phoneCall.time)
 
         if( phoneCall.time != undefined){
           // verify that time is a number and in the future
@@ -115,8 +119,7 @@ if (Meteor.isServer) {
         }
 
         // Insert the phone call into our mongo instance
-        PhoneCalls.insert(phoneCall)
-        console.log("phoneCallTime:",phoneCall.time)
+        insertPhoneCall(phoneCall)
         schedulePhoneCall(phoneCall)
       }
   });
@@ -129,19 +132,22 @@ if (Meteor.isServer) {
     PhoneCalls.find({time: {$gt: now}}).forEach( schedulePhoneCall );
   }
 
+  function insertPhoneCall(phoneCall) {
+    var result = PhoneCalls.insert(phoneCall)
+    phoneCall.id = result
+    console.log("Inserted phoneCall result: ", phoneCall)
+  }
+
   function schedulePhoneCall(phoneCall) {
       // schedule a future to exec the phonecall 
-      console.log("phoneCallTime:",phoneCall.time)
       var callTime = new Date(phoneCall.time);
-      console.log("CallTime:", callTime);
-      console.log("CallTime:", callTime.getTime());
       var now = new Date().getTime() + 5000; 
       if( callTime.getTime() < now ){
         callTime = new Date( now )
       }
 
       console.log("Scheduling phoneCall: ", phoneCall," at ", callTime)
-      var j = new cron.CronJob(callTime, function(){
+      var j = new cron.CronJob(callTime, function() {
           console.log("Initiating phoneCall: ", phoneCall);
           makeCall( phoneCall )
         },
@@ -153,13 +159,50 @@ if (Meteor.isServer) {
   }
 
   function makeCall(phoneCall) {
+    var callbackURL = 'http://ditchameeting.com/twiml/' + phoneCall.id
+    var statusCallback = 'http://ditchameeting.com/status/' + phoneCall.id
+    console.log("Initiating call with callback url:", callbackURL)
     // Alright, our phone number is set up. Let's, say, make a call:
     twilioClient.makeCall({
         to: phoneCall.phone,
         from: TWILIO_PHONE_NUM,
-        url: 'http://www.example.com/twiml.php'
+        url: callbackURL,
+        method: "GET",
+        statusCallback: statusCallback
     }, function(err, responseData){
       console.log( responseData )
     });
   }
+
+  function createTwiml(phoneCall) {
+    var doc = libxml.Document()
+    var resp = doc.node("Response")
+    var say = phoneCall.say == undefined ? "Hello, fellow billionaire!" : phoneCall.say;
+    var say = resp.node("Say", say)
+    var voice = phoneCall.voice == undefined ? "man" : phoneCall.voice;
+    var language = phoneCall.language == undefined ? "en-gb" : phoneCall.language;
+    say.attr("voice", voice)
+    say.attr("language", language)
+
+    var play = resp.node("Play", phoneCall.play)
+    return doc.toString()
+  }
+
+  // Register a route that will serve the twiml docs
+  // required for configuring phone calls
+  Meteor.Router.add('/twiml/:id', function(id) {
+    console.log("Looking for twiml with id:",id)
+    var phoneCall = PhoneCalls.findOne(id);
+    var resp = ""
+    if( phoneCall != undefined ) {
+      resp = createTwiml(phoneCall)
+    }
+    
+    console.log("Response:",resp)
+    return [200, {'Content-Type':'application/xml'}, resp]
+  });
+
+  Meteor.Router.add('/status/:id', function(id) {
+    console.log("Received status for (",id,") : ", this.request.body)
+  });
 }
