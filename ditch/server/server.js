@@ -79,9 +79,6 @@ if (Meteor.isServer) {
           }
         }
 
-        console.log("Call time incomming as: ", phoneCall.time)
-        console.log("Current time: ", new Date().getTime());
-
         if( phoneCall.time != undefined){
           // verify that time is a number and in the future
           if( typeof phoneCall.time === 'number' ) {
