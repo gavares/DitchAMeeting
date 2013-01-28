@@ -1,4 +1,11 @@
-PhoneCalls = new Meteor.Collection("PhoneCalls");
+var PhoneCalls = new Meteor.Collection("PhoneCalls");
+
+var clientId = store.get('client-id');
+
+if (clientId === undefined) {
+  clientId = GUID();
+  store.set('client-id', clientId);
+}
 
 var handleResult = function (err, result) {
   if (err) {
@@ -36,8 +43,7 @@ Template.create.rendered = function () {
 };
 
 Template.scheduled.calls = function () {
-  return PhoneCalls.find({});
-  //return PhoneCalls.find({time: {$gt: new Date().getTime()}})
+  return PhoneCalls.find({time: {$gt: new Date().getTime()}, clientId: clientId});
 };
 
 Template.scheduled.events({
@@ -67,6 +73,8 @@ Template.create.events({
     } catch (e) {
       data.time = (new Date()).getTime();
     }
+
+    data.clientId = clientId;
 
     Meteor.call('create_phone_call', data, handleResult);
   }
