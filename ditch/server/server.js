@@ -11,7 +11,6 @@
 // }
 //
 PhoneCalls = new Meteor.Collection("PhoneCalls");
-TwiMLs  = new Meteor.Collection("TwiMLs");
 
 if (Meteor.isServer) {
 
@@ -163,13 +162,16 @@ if (Meteor.isServer) {
   }
 
   function makeCall(phoneCall) {
-    var callbackURL = 'http://ditchameeting.com/twiml/' + phoneCall.id
+    var callbackURL = 'http://ditchameeting.com/twiml/858fdc07-f4f0-464c-8ae7-e2fe33802de5' //'http://ditchameeting.com/twiml/' + phoneCall.id
+    var statusCallback = 'http://ditchameeting.com/status/' + phoneCall.id
     console.log("Initiating call with callback url:", callbackURL)
     // Alright, our phone number is set up. Let's, say, make a call:
     twilioClient.makeCall({
         to: phoneCall.phone,
         from: TWILIO_PHONE_NUM,
-        url: callbackURL
+        url: callbackURL,
+        method: "GET",
+        statusCallback: statusCallback
     }, function(err, responseData){
       console.log( responseData )
     });
@@ -198,8 +200,12 @@ if (Meteor.isServer) {
     if( phoneCall != undefined ) {
       resp = createTwiml(phoneCall)
     }
-    //return constructXMLForId(TwiMLs.findOne(id));
+    
     console.log("Response:",resp)
-    return resp
+    return [200, {'Content-Type':'application/xml'}, resp]
+  });
+
+  Meteor.Router.add('/status/:id', function(id) {
+    console.log("Received status for (",id,") : ", this.request.body)
   });
 }
