@@ -1,1 +1,4 @@
 *.sw?
+.meteor/
+ditch/.meteor/
+smart.lock
