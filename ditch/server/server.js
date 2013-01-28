@@ -159,7 +159,7 @@ if (Meteor.isServer) {
   }
 
   function makeCall(phoneCall) {
-    var callbackURL = 'http://ditchameeting.com/twiml/858fdc07-f4f0-464c-8ae7-e2fe33802de5' //'http://ditchameeting.com/twiml/' + phoneCall.id
+    var callbackURL = 'http://ditchameeting.com/twiml/' + phoneCall.id
     var statusCallback = 'http://ditchameeting.com/status/' + phoneCall.id
     console.log("Initiating call with callback url:", callbackURL)
     // Alright, our phone number is set up. Let's, say, make a call:
