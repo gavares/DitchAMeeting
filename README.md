@@ -8,7 +8,7 @@ Building
 =============
 
 DitchAMeeting is built on the Meteor technology stack. The project uses some of the newer features of the platform 
-which require us to use the ```mtr``` tool instead of the original ```meteor``` tool. See docs here:
+which require us to use the ```mrt``` tool instead of the original ```meteor``` tool. See docs here:
 
   http://oortcloud.github.com/meteorite/
   
