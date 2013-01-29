@@ -43,7 +43,7 @@ Template.create.rendered = function () {
 };
 
 Template.scheduled.calls = function () {
-  var calls = PhoneCalls.find({time: {$gt: new Date().getTime()}, clientId: clientId});
+  var calls = PhoneCalls.find({time: {$gt: new Date().getTime()}, clientId: clientId, removed: {$ne: true}});
   return calls.map(function (elm) {
     elm.time = new Date(elm.time);
     elm.phone = "(" + elm.phone.substring(0,3) + ") " + elm.phone.substring(3,6) + "-" + elm.phone.substring(6, 10);
@@ -56,7 +56,7 @@ Template.scheduled.events({
     var $target = $(e.target),
         id = $target.data('id');
 
-    PhoneCalls.remove(id);
+    PhoneCalls.update({_id: id}, {$set: {removed: true}});
   }
 });
 

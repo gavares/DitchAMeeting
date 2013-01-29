@@ -102,7 +102,7 @@ if (Meteor.isServer) {
 
         // Make sure we haven't exceeded max calls for the specified date
         var callDateStr = new Date(phoneCall.time).toDateString();
-        var numCallsForDate = PhoneCalls.find({$where: 'new Date(this.time).toDateString() == "' + callDateStr + '"' }).count();
+        var numCallsForDate = PhoneCalls.find({$where: 'new Date(this.time).toDateString() == "' + callDateStr + '"', removed: {$ne: true}}).count();
         console.log("Found ", numCallsForDate, " calls for date ", callDateStr);
 
         if( numCallsForDate >= MAX_CALLS_PER_DAY )
@@ -129,7 +129,7 @@ if (Meteor.isServer) {
    * */
   function schedulePendingPhoneCalls() {
     var now = new Date().getTime();
-    PhoneCalls.find({time: {$gt: now}}).forEach( schedulePhoneCall );
+    PhoneCalls.find({time: {$gt: now}, removed: {$ne: true}}).forEach( schedulePhoneCall );
   }
 
   function insertPhoneCall(phoneCall) {
