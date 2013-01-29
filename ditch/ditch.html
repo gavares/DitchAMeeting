@@ -33,12 +33,14 @@
 <template name="scheduled">
   <table class="table">
     <thead>
+      {{#if hasCalls}}
       <tr>
         <th>Number</th>
         <th>Date</th>
         <th>Retries</th>
         <th>Delete</th>
       </tr>
+      {{/if}}
     </thead>
     <tbody>
       {{#each calls}}

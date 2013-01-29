@@ -42,14 +42,17 @@ Template.create.rendered = function () {
   });
 };
 
-Template.scheduled.calls = function () {
+function VisibleCalls() {
   var calls = PhoneCalls.find({time: {$gt: new Date().getTime()}, clientId: clientId, removed: {$ne: true}});
   return calls.map(function (elm) {
     elm.time = new Date(elm.time);
     elm.phone = "(" + elm.phone.substring(0,3) + ") " + elm.phone.substring(3,6) + "-" + elm.phone.substring(6, 10);
     return elm;
   });
-};
+}
+
+Template.scheduled.calls = VisibleCalls;
+Template.scheduled.hasCalls = function () { return VisibleCalls().length > 0 };
 
 Template.scheduled.events({
   'click button': function (e) {
