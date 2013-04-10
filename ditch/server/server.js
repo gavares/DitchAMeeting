@@ -40,10 +40,8 @@ if (Meteor.isServer) {
   Meteor.startup(function () {
     // Next 6 lines load node modules into meteor
     // See: http://stackoverflow.com/questions/10476170/how-can-i-deploy-node-modules-in-a-meteor-app-on-meteor-com
-    var require = __meteor_bootstrap__.require;
-    var sys = require('sys')
-    var path = require('path');
-    var fs = require('fs');
+    var path = Npm.require('path');
+    var fs = Npm.require('fs');
     var base = path.resolve('.');
     var isBundle = fs.existsSync(base + '/bundle');
     var modulePath = base + (isBundle ? '/bundle/static' : '/public') + '/node_modules';
@@ -53,10 +51,10 @@ if (Meteor.isServer) {
     var cronPath = modulePath + '/cron/';
     var libxmlPath = modulePath + '/libxmljs/';
 
-    var Twilio = require(twilioPath)
+    var Twilio = Npm.require(twilioPath)
     twilioClient = new Twilio(ACCOUNT_SID, AUTH_TOKEN);
-    cron = require(cronPath);
-    libxml = require(libxmlPath);
+    cron = Npm.require(cronPath);
+    libxml = Npm.require(libxmlPath);
 
     // Scan the PhoneCalls collection and schedule anything
     // that is still pending
